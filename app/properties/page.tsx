@@ -2,7 +2,7 @@ import PropertyCard from "@/components/PropertyCard";
 import connectDB from "@/config/database";
 import Property from "@/models/Property";
 
-export  default async function PropertiesPage() {
+export default async function PropertiesPage() {
     await connectDB();
     const properties = await Property.find({}).lean();
     return (

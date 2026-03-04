@@ -1,4 +1,4 @@
-import { model, models, Schema } from "mongoose";
+import mongoose, { models, Schema } from "mongoose";
 
 const PropertySchema = new Schema({
     owner: {
@@ -62,8 +62,9 @@ const PropertySchema = new Schema({
     },
 
 }
-, { timestamps: true }
+, { timestamps: true, collection: "properties" }
 );
 
-const Property = models.Property || model("Property", PropertySchema);
+const Property = models.Property || mongoose.model("Property", PropertySchema);
+
 export default Property;
