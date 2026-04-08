@@ -41,8 +41,9 @@ export default async function addProperty(formData: any) {
             email: formData.get("seller_info.email"),
             phone: formData.get("seller_info.phone"),
         },
+        images: [] as string[],
     };
-    const imageUrls = [];
+    const imageUrls: string[] = [];
     for (const image of images) {
         const imageBuffer = await image.arrayBuffer();
         const imageArray = Array.from(new Uint8Array(imageBuffer));

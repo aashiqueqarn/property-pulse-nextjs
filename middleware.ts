@@ -1,5 +1,7 @@
-export {default} from "next-auth/middleware";
+import { withAuth } from "next-auth/middleware";
+
+export default withAuth();
 
 export const config = {
-    matcher: ["/property/add", "/profile/", "/properties/saved", "/messages"],
-}
+    matcher: ["/property/add", "/profile/:path*", "/properties/saved", "/messages/:path*"],
+};
