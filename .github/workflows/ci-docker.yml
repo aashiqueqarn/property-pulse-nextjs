@@ -1,0 +1,101 @@
+name: CI and Docker Build
+
+on:
+  push:
+    branches:
+      - '**'
+
+env:
+  NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+  MONGODB_URI: ${{ secrets.MONGODB_URI }}
+  NEXT_PUBLIC_DOMAIN: ${{ secrets.NEXT_PUBLIC_DOMAIN }}
+  NEXT_PUBLIC_API_DOMAIN: ${{ secrets.NEXT_PUBLIC_API_DOMAIN }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+  NEXTAUTH_URL_INTERNAL: ${{ secrets.NEXTAUTH_URL_INTERNAL }}
+  NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+  CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+  CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+  CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+
+  docker-master:
+    name: Build Docker image for master
+    if: github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg MODE=production \
+            --build-arg MONGODB_URI="${{ env.MONGODB_URI }}" \
+            --build-arg NEXT_PUBLIC_DOMAIN="${{ env.NEXT_PUBLIC_DOMAIN }}" \
+            --build-arg NEXT_PUBLIC_API_DOMAIN="${{ env.NEXT_PUBLIC_API_DOMAIN }}" \
+            --build-arg GOOGLE_CLIENT_ID="${{ env.GOOGLE_CLIENT_ID }}" \
+            --build-arg GOOGLE_CLIENT_SECRET="${{ env.GOOGLE_CLIENT_SECRET }}" \
+            --build-arg NEXTAUTH_URL="${{ env.NEXTAUTH_URL }}" \
+            --build-arg NEXTAUTH_URL_INTERNAL="${{ env.NEXTAUTH_URL_INTERNAL }}" \
+            --build-arg NEXTAUTH_SECRET="${{ env.NEXTAUTH_SECRET }}" \
+            --build-arg CLOUDINARY_CLOUD_NAME="${{ env.CLOUDINARY_CLOUD_NAME }}" \
+            --build-arg CLOUDINARY_API_KEY="${{ env.CLOUDINARY_API_KEY }}" \
+            --build-arg CLOUDINARY_API_SECRET="${{ env.CLOUDINARY_API_SECRET }}" \
+            -t property-pulse:master-${{ github.sha }} .
+      - name: Inspect Docker image
+        run: docker image inspect property-pulse:master-${{ github.sha }}
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Push Docker image
+        run: docker push property-pulse:master-${{ github.sha }}
+      - name: Tag and push latest
+        run: |
+          docker tag property-pulse:master-${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/property-pulse:master-latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/property-pulse:master-latest
+
+  docker-development:
+    name: Build Docker image for development
+    if: github.ref == 'refs/heads/development'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg MODE=development \
+            --build-arg MONGODB_URI="${{ env.MONGODB_URI }}" \
+            --build-arg NEXT_PUBLIC_DOMAIN="${{ env.NEXT_PUBLIC_DOMAIN }}" \
+            --build-arg NEXT_PUBLIC_API_DOMAIN="${{ env.NEXT_PUBLIC_API_DOMAIN }}" \
+            --build-arg GOOGLE_CLIENT_ID="${{ env.GOOGLE_CLIENT_ID }}" \
+            --build-arg GOOGLE_CLIENT_SECRET="${{ env.GOOGLE_CLIENT_SECRET }}" \
+            --build-arg NEXTAUTH_URL="${{ env.NEXTAUTH_URL }}" \
+            --build-arg NEXTAUTH_URL_INTERNAL="${{ env.NEXTAUTH_URL_INTERNAL }}" \
+            --build-arg NEXTAUTH_SECRET="${{ env.NEXTAUTH_SECRET }}" \
+            --build-arg CLOUDINARY_CLOUD_NAME="${{ env.CLOUDINARY_CLOUD_NAME }}" \
+            --build-arg CLOUDINARY_API_KEY="${{ env.CLOUDINARY_API_KEY }}" \
+            --build-arg CLOUDINARY_API_SECRET="${{ env.CLOUDINARY_API_SECRET }}" \
+            -t property-pulse:development-${{ github.sha }} .
+      - name: Inspect Docker image
+        run: docker image inspect property-pulse:development-${{ github.sha }}
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Push Docker image
+        run: docker push property-pulse:development-${{ github.sha }}
+      - name: Tag and push latest
+        run: |
+          docker tag property-pulse:development-${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/property-pulse:development-latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/property-pulse:development-latest
