@@ -54,16 +54,15 @@ jobs:
             --build-arg CLOUDINARY_CLOUD_NAME="${{ env.CLOUDINARY_CLOUD_NAME }}" \
             --build-arg CLOUDINARY_API_KEY="${{ env.CLOUDINARY_API_KEY }}" \
             --build-arg CLOUDINARY_API_SECRET="${{ env.CLOUDINARY_API_SECRET }}" \
-            -t property-pulse:master-${{ github.sha }} .
+            -t ${{ secrets.DOCKER_USERNAME }}/property-pulse:master-${{ github.sha }} \
+            -t ${{ secrets.DOCKER_USERNAME }}/property-pulse:master-latest .
       - name: Inspect Docker image
-        run: docker image inspect property-pulse:master-${{ github.sha }}
+        run: docker image inspect ${{ secrets.DOCKER_USERNAME }}/property-pulse:master-${{ github.sha }}
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: Push Docker image
-        run: docker push property-pulse:master-${{ github.sha }}
-      - name: Tag and push latest
         run: |
-          docker tag property-pulse:master-${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/property-pulse:master-latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/property-pulse:master-${{ github.sha }}
           docker push ${{ secrets.DOCKER_USERNAME }}/property-pulse:master-latest
 
   docker-development:
@@ -88,14 +87,13 @@ jobs:
             --build-arg CLOUDINARY_CLOUD_NAME="${{ env.CLOUDINARY_CLOUD_NAME }}" \
             --build-arg CLOUDINARY_API_KEY="${{ env.CLOUDINARY_API_KEY }}" \
             --build-arg CLOUDINARY_API_SECRET="${{ env.CLOUDINARY_API_SECRET }}" \
-            -t property-pulse:development-${{ github.sha }} .
+            -t ${{ secrets.DOCKER_USERNAME }}/property-pulse:development-${{ github.sha }} \
+            -t ${{ secrets.DOCKER_USERNAME }}/property-pulse:development-latest .
       - name: Inspect Docker image
-        run: docker image inspect property-pulse:development-${{ github.sha }}
+        run: docker image inspect ${{ secrets.DOCKER_USERNAME }}/property-pulse:development-${{ github.sha }}
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: Push Docker image
-        run: docker push property-pulse:development-${{ github.sha }}
-      - name: Tag and push latest
         run: |
-          docker tag property-pulse:development-${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/property-pulse:development-latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/property-pulse:development-${{ github.sha }}
           docker push ${{ secrets.DOCKER_USERNAME }}/property-pulse:development-latest
