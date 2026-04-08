@@ -5,11 +5,19 @@ import PropertyImages from "@/components/PropertyImages";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 import PropertyDetails from "@/components/PropertyDetails";
+import {structuredClone} from "next/dist/compiled/@edge-runtime/primitives";
 
 export default async function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     await connectDB();
-    const property = await Property.findById(id).lean();
+    const property = structuredClone(await Property.findById(id).lean());
+    if (!property) {
+        return(
+            <div className='text-center text-2xl font-bold mt-10'>
+                Property Not Found
+            </div>
+        )
+    }
     return (
         <>
             <PropertyHeaderImage image={property?.images[0]} />

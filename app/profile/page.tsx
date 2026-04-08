@@ -15,7 +15,12 @@ export default async function ProfilePage() {
     if (!userId) {
         throw new Error("User Id is required")
     }
-    const properties = structuredClone(await Property.find({owner: userId}).lean());
+    const propertiesData = await Property.find({owner: userId}).lean();
+    const properties = propertiesData.map((prop: any) => ({
+        ...prop,
+        _id: prop._id.toString(),
+        owner: prop.owner.toString(),
+    }));
     return (
         <section className="bg-blue-50">
             <div className="container m-auto py-24">
